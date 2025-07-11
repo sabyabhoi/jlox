@@ -71,9 +71,34 @@ public class Scanner {
                 break;
             case '"': string(); break;
             default:
-                Lox.error(line, "Unrecognized character '" + (char) c + "'");
+                if(isDigit(c)) {
+                    number();
+                } else {
+                    Lox.error(line, "Unrecognized character '" + (char) c + "'");
+                }
                 break;
         }
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private void number() {
+        while(isDigit(peek())) {
+            advance();
+        }
+
+        if(peek() == '.' && isDigit(peekNext())) {
+            do advance();
+            while (isDigit(peek()));
+        }
+        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
+    }
+
+    private char peekNext() {
+        if(current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
     }
 
     private void string() {
