@@ -82,7 +82,23 @@ public class Scanner {
             case '/':
                 if(match('/')) {
                     while(peek() != '\n' && !isAtEnd()) advance();
-                } else {
+                } else if(match('*')) {
+                    boolean errorEncountered = false;
+                    while(peek() != '*' && peekNext() != '/') {
+                        if(peek() == '\n') ++line;
+                        else if(isAtEnd()) {
+                            Lox.error(line, "Unexpected end of file");
+                            errorEncountered = true;
+                            break;
+                        }
+                        advance();
+                    }
+                    if(!errorEncountered) {
+                        advance();
+                        advance();
+                    }
+                }
+                else {
                     addToken(SLASH);
                 }
                 break;
