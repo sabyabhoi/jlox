@@ -1,6 +1,8 @@
 package com.sabyabhoi.lox;
 
-public class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
+
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
@@ -85,6 +87,19 @@ public class Interpreter implements Expr.Visitor<Object> {
         };
     }
 
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
     private void checkNumberOperand(Token operator, Object right) {
         if(right instanceof Double) return;
         throw new RuntimeError(operator, "Operand must be a number");
@@ -111,13 +126,18 @@ public class Interpreter implements Expr.Visitor<Object> {
         return expr.accept(this);
     }
 
-    void interpret(Expr expr) {
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expr);
-            System.out.println(stringify(value));
-        } catch(RuntimeError e) {
+            for(Stmt statement : statements) {
+                execute(statement);
+            }
+        } catch (RuntimeError e) {
             Lox.runtimeError(e);
         }
+    }
+
+    private void execute(Stmt statement) {
+        statement.accept(this);
     }
 
     private String stringify(Object value) {
