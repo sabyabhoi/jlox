@@ -12,14 +12,19 @@ public class Lox {
 
     private static final int USAGE_ERROR_STATUS_CODE = 64;
     private static final int INPUT_DATA_ERROR_STATUS_CODE = 65;
+    private static final int RUNTIME_ERROR_STATUS_CODE = 70;
+
+    private static final Interpreter interpreter = new Interpreter();
 
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
         if(hadError) System.exit(INPUT_DATA_ERROR_STATUS_CODE);
+        if(hadRuntimeError) System.exit(RUNTIME_ERROR_STATUS_CODE);
     }
 
     private static void runPrompt() throws IOException {
@@ -44,7 +49,7 @@ public class Lox {
 
         if(hadError) return;
 
-        System.out.println(new AstPrinter().print(expr));
+        interpreter.interpret(expr);
     }
 
     static void error(int line, String message) {
@@ -57,6 +62,11 @@ public class Lox {
         } else {
             report(token.line(), " at '" + token.lexeme() + "'", message);
         }
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token.line() + "]");
+        hadRuntimeError = true;
     }
 
     private static void report(int line, String where, String message) {
