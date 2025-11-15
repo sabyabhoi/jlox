@@ -1,5 +1,6 @@
 package com.sabyabhoi.lox;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -245,7 +246,35 @@ public class Parser {
             Expr right = unary();
             return new Expr.Unary(operator, right);
         }
+        return call();
+    }
+
+    private Expr call() {
+        Expr expr = primary();
+        
+        while(true) {
+            if(match(LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {break;}
+        }
+        
         return primary();
+    }
+
+    private Expr finishCall(Expr callee) {
+        List<Expr> arguments = new ArrayList<>();
+        if(!check(RIGHT_PAREN)) {
+            do {
+                if(arguments.size() >= 255) {
+                    error(peek(), "Can't have more than 255 arguments.");
+                }
+                arguments.add(expression());
+            } while(match(COMMA));
+        }
+
+        Token paren = consume(RIGHT_PAREN, "Expected ')' after arguments.");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {
